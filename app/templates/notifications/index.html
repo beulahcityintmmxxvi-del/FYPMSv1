@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications Center{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">System Alerts</p>
+        <h3>Your Notification Center</h3>
+        <p>Track approvals, rejections, review alerts, and workflow reminders in one place.</p>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Messages</h3>
+        <span class="panel-badge">{{ notifications|length }} items</span>
+    </div>
+
+    <div class="notification-grid">
+        {% if notifications %}
+            {% for n in notifications %}
+            <article class="notification-card {% if not n.is_read %}notification-unread{% endif %}">
+                <div class="notification-top">
+                    <div>
+                        <strong>{{ n.title }}</strong>
+                        <p>{{ n.created_at.strftime('%b %d, %Y %H:%M') if n.created_at else '' }}</p>
+                    </div>
+                    <span class="notif-type">{{ n.type|title }}</span>
+                </div>
+
+                <p class="notification-message">{{ n.message }}</p>
+
+                <div class="notification-actions">
+                    {% if not n.is_read %}
+                    <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">
+                        <button type="submit" class="btn btn-primary">Mark as read</button>
+                    </form>
+                    {% else %}
+                    <span class="btn btn-ghost">Read</span>
+                    {% endif %}
+                    {% if n.action_url %}
+                    <a class="btn btn-ghost" href="{{ n.action_url }}">Open link</a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No notifications yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

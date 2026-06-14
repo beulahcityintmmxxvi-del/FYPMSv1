@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Supervisor Dashboard{% endblock %}
+{% block page_title %}Supervisor Command Center{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Supervision Workspace</p>
+        <h3>Welcome, {{ current_user.full_name }}</h3>
+        <p>
+            Review pending submissions, monitor project progress, and manage student supervision with AI-powered insight.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="#pending-reviews">Review Pending</a>
+        <a class="btn btn-ghost" href="{{ url_for('notifications.index') }}">Alerts</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    {% for card in cards %}
+    <article class="stat-card">
+        <span class="stat-label">{{ card.label }}</span>
+        <strong class="stat-value">{{ card.value }}</strong>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Workload Distribution</h3>
+            <span class="panel-badge">Assigned projects</span>
+        </div>
+
+        <div class="chart-shell">
+            <canvas id="workloadChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel" id="pending-reviews">
+        <div class="panel-head">
+            <h3>Pending Reviews</h3>
+            <span class="panel-badge">{{ pending_reviews|length }} items</span>
+        </div>
+
+        <div class="activity-list">
+            {% if pending_reviews %}
+                {% for sub in pending_reviews[:8] %}
+                <div class="activity-item">
+                    <div>
+                        <strong>{{ sub.project.student.user.full_name }}</strong>
+                        <p>{{ sub.stage|replace('_', ' ')|title }} · Similarity {{ (sub.similarity_score * 100) | round(2) }}%</p>
+                    </div>
+                    <a href="{{ url_for('supervisor.review_submission_view', submission_id=sub.id) }}">Review</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No pending submissions to review.</p>
+                </div>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Assigned Projects</h3>
+        <span class="panel-badge">Student load</span>
+    </div>
+
+    <div class="mini-grid">
+        {% for project in projects[:8] %}
+        <article class="mini-card">
+            <div class="mini-head">
+                <strong>{{ project.student.user.full_name }}</strong>
+                <span>{{ project.current_stage|replace('_', ' ')|title if project.current_stage else 'Proposal' }}</span>
+            </div>
+            <p>{{ project.title or 'Untitled project' }}</p>
+        </article>
+        {% else %}
+        <div class="empty-state">
+            <p>No assigned projects yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("workloadChart");
+    if (!canvas) return;
+
+    const labels = {{ project_labels | tojson }};
+    const values = {{ project_values | tojson }};
+
+    new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "Submission count",
+                data: values,
+                backgroundColor: "#10b981",
+                borderRadius: 12,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
+                y: { beginAtZero: true, grid: { color: "rgba(148,163,184,.15)" }, ticks: { color: "#94a3b8" } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

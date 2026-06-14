@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Archived Project Detail{% endblock %}
+{% block page_title %}Archived Project Detail{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Archived Record</p>
+        <h3>{{ archive.project.title if archive.project and archive.project.title else "Untitled Project" }}</h3>
+        <p>
+            This record is preserved for historical, academic, and audit purposes.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('admin.archived_projects') }}">Back to Archive</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.reports') }}">Reports</a>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Snapshot Overview</h3>
+        <span class="panel-badge">Archived at {{ archive.archived_at.strftime('%b %d, %Y %H:%M') if archive.archived_at else 'N/A' }}</span>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <span class="detail-label">Student</span>
+            <strong>{{ archive.project.student.user.full_name if archive.project and archive.project.student and archive.project.student.user else "N/A" }}</strong>
+        </div>
+        <div class="detail-card">
+            <span class="detail-label">Supervisor</span>
+            <strong>{{ archive.project.supervisor.user.full_name if archive.project and archive.project.supervisor and archive.project.supervisor.user else "N/A" }}</strong>
+        </div>
+        <div class="detail-card">
+            <span class="detail-label">Department</span>
+            <strong>{{ archive.project.department.name if archive.project and archive.project.department else "N/A" }}</strong>
+        </div>
+        <div class="detail-card">
+            <span class="detail-label">Academic Session</span>
+            <strong>{{ archive.project.academic_session.name if archive.project and archive.project.academic_session else "N/A" }}</strong>
+        </div>
+    </div>
+
+    <div class="panel-note">
+        <strong>Archive Reason:</strong> {{ archive.archive_reason or "No reason provided" }}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Stored Snapshot JSON</h3>
+        <span class="panel-badge">Read-only</span>
+    </div>
+
+    <pre style="white-space:pre-wrap; word-break:break-word; color: var(--muted);">
+{{ archive.data_snapshot | tojson(indent=2) }}
+    </pre>
+</section>
+{% endblock %}

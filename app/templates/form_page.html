@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="panel auth-card">
+    <div class="panel-head">
+        <h3>{{ title }}</h3>
+        <span class="panel-badge">Secure form</span>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="form-grid">
+        {{ form.hidden_tag() }}
+
+        {% for field in form %}
+            {% if field.name not in ['csrf_token', 'submit'] %}
+                <div class="field {% if field.type == 'TextAreaField' or field.type == 'FileField' %}field-full{% endif %}">
+                    <label>{{ field.label.text }}</label>
+                    {% if field.type == 'TextAreaField' %}
+                        {{ field(class="input textarea") }}
+                    {% elif field.type == 'FileField' %}
+                        {{ field(class="input file-input") }}
+                    {% else %}
+                        {{ field(class="input") }}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <small class="error-text">{{ error }}</small>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary btn-block">{{ form.submit.label.text }}</button>
+    </form>
+
+    {% if reset_link %}
+        <div class="panel-note">
+            <a href="{{ reset_link }}">Open reset link</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

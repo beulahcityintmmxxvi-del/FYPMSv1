@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Archived Projects{% endblock %}
+{% block page_title %}Archived Projects{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Records Preservation</p>
+        <h3>Archived Project Registry</h3>
+        <p>
+            View completed and archived final year projects with their snapshot history, archive reason, and supervision data.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('admin.reports') }}">Open Reports</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span class="stat-label">Archived Projects</span>
+        <strong class="stat-value">{{ archive_data.count }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Latest Archive</span>
+        <strong class="stat-value">{{ archive_data.latest.archived_at if archive_data.latest else "N/A" }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Registry State</span>
+        <strong class="stat-value">Active</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Compliance</span>
+        <strong class="stat-value">Audited</strong>
+    </article>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Archive Records</h3>
+        <span class="panel-badge">{{ archive_data.count }} entries</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+           <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Student</th>
+                    <th>Supervisor</th>
+                    <th>Department</th>
+                    <th>Session</th>
+                    <th>Archived At</th>
+                    <th>Reason</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in archive_data.items %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.student }}</td>
+                    <td>{{ item.supervisor }}</td>
+                    <td>{{ item.department }}</td>
+                    <td>{{ item.session }}</td>
+                    <td>{{ item.archived_at }}</td>
+                    <td>{{ item.reason }}</td>
+                    <td>
+                        <a class="btn btn-ghost" href="{{ url_for('admin.archived_project_detail', archive_id=item.archive_id) }}">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="cell-empty" colspan="8">No archived projects yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+
+        </table>
+    </div>
+</section>
+{% endblock %}

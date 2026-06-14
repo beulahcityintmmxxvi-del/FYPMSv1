@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-3">
+    <div class="lg:col-span-1 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+        <h3 class="mb-4 font-semibold">Create / Update</h3>
+        <form method="POST" class="space-y-4">
+            {{ form.hidden_tag() }}
+            {% for field in form if field.name != 'csrf_token' and field.name != 'submit' %}
+            <div>
+                <label class="mb-2 block text-sm font-medium">{{ field.label.text }}</label>
+                {{ field(class="w-full rounded-xl border-slate-300 bg-transparent p-3") }}
+                {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="rounded-xl bg-primary-600 px-5 py-3 font-medium text-white">{{ form.submit.label.text }}</button>
+        </form>
+    </div>
+
+    <div class="lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 overflow-x-auto">
+        <h3 class="mb-4 font-semibold">Existing Records</h3>
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 dark:bg-slate-800">
+                <tr>
+                    {% for _, label in columns %}
+                    <th class="px-4 py-3 text-left">{{ label }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    {% for key, _ in columns %}
+                    <td class="cell">
+                        {{ item|attr(key) if key != 'is_active' else ('Yes' if item.is_active else 'No') }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="cell cell-empty" colspan="{{ columns|length }}">No records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

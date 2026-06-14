@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Institutional Reports{% endblock %}
+{% block page_title %}Institutional Reports{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Analytics & Governance</p>
+        <h3>Institutional Reporting Center</h3>
+        <p>
+            Track plagiarism risk, submission activity, departmental distribution, and export official reports for management use.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('admin.export_reports_pdf') }}">Export PDF</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.export_reports_csv') }}">Export CSV</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.export_reports_xlsx') }}">Export Excel</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.archived_projects') }}">Archived Projects</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    {% for card in report_data.cards %}
+    <article class="stat-card">
+        <span class="stat-label">{{ card.label }}</span>
+        <strong class="stat-value">{{ card.value }}</strong>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Risk Distribution</h3>
+            <span class="panel-badge">Plagiarism levels</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="riskChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Stage Distribution</h3>
+            <span class="panel-badge">Submission stages</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="stageChart"></canvas>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Department Distribution</h3>
+            <span class="panel-badge">Academic coverage</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Report Summary</h3>
+            <span class="panel-badge">{{ report_data.rows|length }} records</span>
+        </div>
+
+        <div class="activity-list">
+            <div class="activity-item">
+                <div>
+                    <strong>Total Reports</strong>
+                    <p>{{ report_data.cards[0].value }}</p>
+                </div>
+                <span>Generated</span>
+            </div>
+            <div class="activity-item">
+                <div>
+                    <strong>Average Similarity</strong>
+                    <p>{{ report_data.cards[1].value }}</p>
+                </div>
+                <span>Trend</span>
+            </div>
+            <div class="activity-item">
+                <div>
+                    <strong>Red Risk Count</strong>
+                    <p>{{ report_data.cards[2].value }}</p>
+                </div>
+                <span>Critical</span>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h3>Submission Report Table</h3>
+        <span class="panel-badge">Exportable data</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Matric No</th>
+                    <th>Department</th>
+                    <th>Supervisor</th>
+                    <th>Project Title</th>
+                    <th>Stage</th>
+                    <th>Status</th>
+                    <th>Similarity</th>
+                    <th>Risk</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_data.rows[:30] %}
+                <tr>
+                    <td>{{ row.student }}</td>
+                    <td>{{ row.matric_no }}</td>
+                    <td>{{ row.department }}</td>
+                    <td>{{ row.supervisor }}</td>
+                    <td>{{ row.project_title }}</td>
+                    <td>{{ row.stage|replace('_', ' ')|title }}</td>
+                    <td>{{ row.status|replace('_', ' ')|title }}</td>
+                    <td>{{ row.similarity }}%</td>
+                    <td>{{ row.risk|title }}</td>
+                    <td>{{ row.submitted_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="cell-empty" colspan="10">No submission data available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const riskCanvas = document.getElementById("riskChart");
+    const stageCanvas = document.getElementById("stageChart");
+    const deptCanvas = document.getElementById("departmentChart");
+
+    const riskLabels = {{ report_data.risk_labels | tojson }};
+    const riskValues = {{ report_data.risk_values | tojson }};
+    const stageLabels = {{ report_data.stage_labels | tojson }};
+    const stageValues = {{ report_data.stage_values | tojson }};
+    const deptLabels = {{ report_data.department_labels | tojson }};
+    const deptValues = {{ report_data.department_values | tojson }};
+
+    if (riskCanvas) {
+        new Chart(riskCanvas, {
+            type: "doughnut",
+            data: {
+                labels: riskLabels,
+                datasets: [{
+                    data: riskValues,
+                    backgroundColor: ["#10b981", "#f59e0b", "#ef4444"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } }
+            }
+        });
+    }
+
+    if (stageCanvas) {
+        new Chart(stageCanvas, {
+            type: "bar",
+            data: {
+                labels: stageLabels,
+                datasets: [{
+                    data: stageValues,
+                    backgroundColor: "#2563eb",
+                    borderRadius: 12,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
+                    y: { beginAtZero: true, grid: { color: "rgba(148,163,184,.15)" }, ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+
+    if (deptCanvas) {
+        new Chart(deptCanvas, {
+            type: "bar",
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    data: deptValues,
+                    backgroundColor: "#10b981",
+                    borderRadius: 12,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
+                    y: { beginAtZero: true, grid: { color: "rgba(148,163,184,.15)" }, ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

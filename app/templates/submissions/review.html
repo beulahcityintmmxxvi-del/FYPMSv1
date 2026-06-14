@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Review Submission{% endblock %}
+{% block page_title %}Review Submission{% endblock %}
+
+{% block content %}
+<section class="review-layout">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Submission Summary</h3>
+            <span class="panel-badge">{{ submission.stage|replace('_', ' ')|title }}</span>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-card">
+                <span class="detail-label">Student</span>
+                <strong>{{ submission.project.student.user.full_name }}</strong>
+            </div>
+            <div class="detail-card">
+                <span class="detail-label">Project</span>
+                <strong>{{ submission.project.title or 'Untitled Project' }}</strong>
+            </div>
+            <div class="detail-card">
+                <span class="detail-label">Status</span>
+                <strong>{{ submission.status|replace('_', ' ')|title }}</strong>
+            </div>
+            <div class="detail-card">
+                <span class="detail-label">Similarity</span>
+                <strong>{{ (submission.similarity_score * 100) | round(2) }}%</strong>
+            </div>
+        </div>
+
+        <div class="report-card risk-{{ submission.ai_risk_level }}">
+            <div>
+                <p class="report-label">AI Risk</p>
+                <strong class="report-value">{{ submission.ai_risk_level|title }}</strong>
+            </div>
+            <div class="report-meta">
+                <span>Uploaded: {{ submission.submitted_at.strftime('%b %d, %Y %H:%M') if submission.submitted_at else '' }}</span>
+                {% if submission.plagiarism_report %}
+                <a href="{{ url_for('student.download_report', report_id=submission.plagiarism_report.id) }}">Download report</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if submission.plagiarism_report and submission.plagiarism_report.matched_documents_json %}
+        <div class="panel-note">
+            <strong>Matched Documents</strong>
+            {% for item in submission.plagiarism_report.matched_documents_json %}
+                <div class="match-row">
+                    <span>Submission {{ item.submission_id if item.submission_id is defined else item['submission_id'] }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Supervisor Decision</h3>
+            <span class="panel-badge">Review controls</span>
+        </div>
+
+        <form method="POST" class="form-grid">
+            {{ form.hidden_tag() }}
+
+            <div class="field">
+                <label>{{ form.decision.label.text }}</label>
+                {{ form.decision(class="input") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.remarks.label.text }}</label>
+                {{ form.remarks(class="input textarea") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.comments.label.text }}</label>
+                {{ form.comments(class="input textarea") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.annotations.label.text }}</label>
+                {{ form.annotations(class="input textarea") }}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{ form.submit.label.text }}</button>
+        </form>
+    </article>
+</section>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Student Registration{% endblock %}
+{% block page_title %}Student Registration{% endblock %}
+
+{% block content %}
+<section class="auth-layout auth-layout-wide">
+    <div class="auth-brand">
+        <div class="hero-mark">
+            <svg viewBox="0 0 64 64" fill="none">
+                <path d="M14 18h36v28H14z" stroke="currentColor" stroke-width="2.5" />
+                <path d="M20 24h24M20 30h24M20 36h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                <path d="M18 46h28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+        </div>
+        <h3>Create Student Account</h3>
+        <p>
+            Login is by matriculation number. The system assigns the default password
+            <strong>1234567</strong> and requires it to be changed after first login.
+        </p>
+    </div>
+
+    <div class="auth-card">
+        <div class="panel-head">
+            <h3>Student Registration</h3>
+            <span class="panel-badge">Secure onboarding</span>
+        </div>
+
+        <form method="POST" class="form-grid form-grid-two">
+            {{ form.hidden_tag() }}
+
+            <div class="field">
+                <label>{{ form.full_name.label.text }}</label>
+                {{ form.full_name(class="input") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.email.label.text }}</label>
+                {{ form.email(class="input") }}
+            </div>
+
+            <div class="field">
+                <p class="help-text">Enter your 10-digit matric number, e.g. 2460141000.</p>
+                <label>{{ form.matric_no.label.text }}</label>
+                {{ form.matric_no(class="input") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.department_id.label.text }}</label>
+                {{ form.department_id(class="input select-input") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.level.label.text }}</label>
+                {{ form.level(class="input") }}
+            </div>
+
+            <div class="field">
+                <label>{{ form.phone.label.text }}</label>
+                {{ form.phone(class="input") }}
+            </div>
+
+            <div class="field field-full">
+                <label>{{ form.address.label.text }}</label>
+                {{ form.address(class="input textarea") }}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{ form.submit.label.text }}</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

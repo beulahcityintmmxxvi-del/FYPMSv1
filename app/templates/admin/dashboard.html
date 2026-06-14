@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Control Center{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Institutional Governance</p>
+        <h3>Administration Dashboard</h3>
+        <p>
+            Manage departments, sessions, plagiarism thresholds, archives, and institutional analytics from a single command center.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('admin.departments') }}">Departments</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.sessions') }}">Sessions</a>
+        <a class="btn btn-ghost" href="{{ url_for('admin.settings') }}">Thresholds</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    {% for card in cards %}
+    <article class="stat-card">
+        <span class="stat-label">{{ card.label }}</span>
+        <strong class="stat-value">{{ card.value }}</strong>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Monthly Submissions</h3>
+            <span class="panel-badge">Trend analysis</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Plagiarism Trend</h3>
+            <span class="panel-badge">Similarity levels</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="plagiarismChart"></canvas>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Department Distribution</h3>
+            <span class="panel-badge">Coverage</span>
+        </div>
+        <div class="chart-shell">
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>System Shortcuts</h3>
+            <span class="panel-badge">Quick actions</span>
+        </div>
+
+        <div class="quick-grid">
+            <a class="quick-card" href="{{ url_for('admin.departments') }}">Manage Departments</a>
+            <a class="quick-card" href="{{ url_for('admin.sessions') }}">Academic Sessions</a>
+            <a class="quick-card" href="{{ url_for('admin.settings') }}">Plagiarism Thresholds</a>
+            <a class="quick-card" href="{{ url_for('notifications.index') }}">Notifications</a>
+            <a class="quick-card" href="{{ url_for('admin.register_supervisor_admin') }}">Register Supervisor</a>
+            <a class="quick-card" href="{{ url_for('admin.reports') }}">Analytics & Reports</a>
+            <a class="quick-card" href="{{ url_for('admin.archived_projects') }}">Archived Projects</a>
+            <a class="quick-card" href="{{ url_for('admin.export_reports_csv') }}">Export CSV</a>
+        </div>
+
+        <div class="chips-wrap">
+            {% for stage, count in chart_data.stage_counts.items() %}
+            <span class="chip">{{ stage|replace('_', ' ')|title }}: {{ count }}</span>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const monthly = document.getElementById("monthlyChart");
+    const plagiarism = document.getElementById("plagiarismChart");
+    const departments = document.getElementById("departmentChart");
+
+    const monthlyLabels = {{ chart_data.monthly_labels | tojson }};
+    const monthlyValues = {{ chart_data.monthly_values | tojson }};
+    const plagiarismLabels = {{ chart_data.plagiarism_labels | tojson }};
+    const plagiarismValues = {{ chart_data.plagiarism_values | tojson }};
+    const departmentLabels = {{ chart_data.department_labels | tojson }};
+    const departmentValues = {{ chart_data.department_values | tojson }};
+
+    if (monthly) {
+        new Chart(monthly, {
+            type: "bar",
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: "Submissions",
+                    data: monthlyValues,
+                    backgroundColor: "#2563eb",
+                    borderRadius: 12,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
+                    y: { beginAtZero: true, grid: { color: "rgba(148,163,184,.15)" }, ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+
+    if (plagiarism) {
+        new Chart(plagiarism, {
+            type: "line",
+            data: {
+                labels: plagiarismLabels,
+                datasets: [{
+                    label: "Similarity %",
+                    data: plagiarismValues,
+                    borderColor: "#f59e0b",
+                    backgroundColor: "rgba(245, 158, 11, 0.12)",
+                    tension: 0.35,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
+                    y: { beginAtZero: true, grid: { color: "rgba(148,163,184,.15)" }, ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+
+    if (departments) {
+        new Chart(departments, {
+            type: "doughnut",
+            data: {
+                labels: departmentLabels,
+                datasets: [{
+                    data: departmentValues,
+                    backgroundColor: ["#10b981", "#2563eb", "#f59e0b", "#06b6d4", "#8b5cf6"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

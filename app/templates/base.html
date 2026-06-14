@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FPI FYPMS{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body class="app-body">
+<div class="app-shell">
+    <aside class="sidebar" data-sidebar>
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none">
+                    <path d="M14 18h36v28H14z" stroke="currentColor" stroke-width="2.5" />
+                    <path d="M20 24h24M20 30h24M20 36h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                    <path d="M18 46h28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
+            </div>
+            <div>
+                <h1>Web-Based FYPMS</h1>
+                <p>Federal Polytechnic Ilaro</p>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+            {% if current_user.is_authenticated and current_user.has_role('student') %}
+                <a class="nav-link" href="{{ url_for('student.dashboard') }}">Student Dashboard</a>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.has_role('supervisor') %}
+                <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}">Supervisor Dashboard</a>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.has_role('admin') %}
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
+            {% endif %}
+
+            {% if current_user.is_authenticated and current_user.has_role('department_admin') %}
+                <a href="{{ url_for('department_admin.dashboard') }}" class="nav-link">Department Admin</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>Modern academic workflow automation</p>
+        </div>
+    </aside>
+
+    <div class="sidebar-overlay" data-sidebar-overlay></div>
+
+    <div class="main-wrap">
+        <header class="topbar">
+            <button class="icon-btn" type="button" data-sidebar-toggle aria-label="Open menu">☰</button>
+            <div class="topbar-title">
+                <span class="eyebrow">{% block eyebrow %}Academic Project Management{% endblock %}</span>
+                <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+            </div>
+
+            <div class="topbar-actions">
+                <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme">◐</button>
+
+                {% if current_user.is_authenticated %}
+                <div class="notif-wrap">
+                    <button class="icon-btn notif-toggle" type="button" data-notif-toggle aria-label="Open notifications">
+                        ✦ <span>{{ unread_notifications_count or 0 }}</span>
+                    </button>
+
+                    <div class="notif-dropdown" data-notif-menu>
+                        <div class="notif-dropdown-head">
+                            <strong>Recent Notifications</strong>
+                            <a href="{{ url_for('notifications.index') }}">View all</a>
+                        </div>
+
+                        {% for n in recent_notifications %}
+                        <a class="notif-item {% if not n.is_read %}unread{% endif %}"
+                        href="{{ n.action_url or url_for('notifications.index') }}">
+                            <div class="notif-item-top">
+                                <strong>{{ n.title }}</strong>
+                                <span>{{ n.created_at.strftime('%b %d') if n.created_at else '' }}</span>
+                            </div>
+                            <p>{{ n.message[:90] }}{% if n.message|length > 90 %}...{% endif %}</p>
+                        </a>
+                        {% else %}
+                        <div class="notif-item empty">No notifications</div>
+                        {% endfor %}
+
+                        <a class="notif-view-all" href="{{ url_for('notifications.index') }}">Open notification center</a>
+                    </div>
+                </div>
+
+                <a class="btn btn-ghost" href="{{ url_for('auth.logout') }}">Logout</a>
+                {% else %}
+                <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Login</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="page">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="toast-stack">
+                        {% for category, message in messages %}
+                            <div class="toast toast-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+</body>
+</html>

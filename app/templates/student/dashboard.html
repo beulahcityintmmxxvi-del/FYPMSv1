@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Student Command Center{% endblock %}
+
+{% block content %}
+<section class="hero-card dashboard-hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Federal Polytechnic Ilaro</p>
+        <h3>Welcome, {{ current_user.full_name }}</h3>
+        <p>
+            Track your project workflow, view approvals, monitor plagiarism, and submit chapters sequentially from one secure workspace.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        {% if project %}
+            {% if allowed_stage != 'completed' %}
+                <a class="btn btn-primary" href="{{ url_for('student.submit', stage=allowed_stage) }}">
+                    Continue with {{ allowed_stage|replace('_', ' ')|title }}
+                </a>
+            {% else %}
+                <span class="btn btn-ghost">Project Completed</span>
+            {% endif %}
+        {% else %}
+            <a class="btn btn-primary" href="{{ url_for('student.submit', stage='proposal') }}">
+                Start Proposal
+            </a>
+        {% endif %}
+        <a class="btn btn-ghost" href="{{ url_for('notifications.index') }}">Notifications</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    {% for card in cards %}
+    <article class="stat-card">
+        <span class="stat-label">{{ card.label }}</span>
+        <strong class="stat-value">{{ card.value }}</strong>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Workflow Progress</h3>
+            <span class="panel-badge">{{ project.current_stage|replace('_', ' ')|title if project and project.current_stage else 'Proposal Pending' }}</span>
+        </div>
+
+        <div class="stage-grid">
+            {% set stages = ['proposal', 'chapter1', 'chapter2', 'chapter3', 'chapter4', 'chapter5', 'source_code'] %}
+            {% for stage in stages %}
+                {% set stage_sub = (submissions | selectattr('stage', 'equalto', stage) | list | first) %}
+                <article class="stage-card
+                    {% if stage_sub and stage_sub.status == 'approved' %}stage-ok
+                    {% elif stage == allowed_stage %}stage-next
+                    {% else %}stage-lock{% endif %}">
+                    <div class="stage-top">
+                        <span class="stage-index">{{ loop.index }}</span>
+                        <span class="stage-status">
+                            {% if stage_sub %}
+                                {{ stage_sub.status|replace('_', ' ')|title }}
+                            {% elif stage == allowed_stage %}
+                                Unlocked
+                            {% else %}
+                                Locked
+                            {% endif %}
+                        </span>
+                    </div>
+                    <h4>{{ stage|replace('_', ' ')|title }}</h4>
+                    <p>
+                        {% if stage_sub %}
+                            Similarity {{ (stage_sub.similarity_score * 100) | round(2) }}%
+                        {% elif stage == allowed_stage %}
+                            Ready for submission
+                        {% else %}
+                            Awaiting prior approval
+                        {% endif %}
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Recent Activity</h3>
+            <span class="panel-badge">Latest submissions</span>
+        </div>
+
+        <div class="activity-list">
+            {% if submissions %}
+                {% for sub in submissions[:6] %}
+                <div class="activity-item">
+                    <div>
+                        <strong>{{ sub.stage|replace('_', ' ')|title }} v{{ sub.version }}</strong>
+                        <p>{{ sub.status|replace('_', ' ')|title }} · Similarity {{ (sub.similarity_score * 100) | round(2) }}%</p>
+                    </div>
+                    <a href="{{ url_for('student.submission_detail', submission_id=sub.id) }}">Open</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No submissions yet. Start with your proposal.</p>
+                </div>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Plagiarism Snapshot</h3>
+            <span class="panel-badge">AI analysis</span>
+        </div>
+
+        {% if submissions %}
+            {% set latest_submission = submissions|first %}
+            {% if latest_submission.plagiarism_report %}
+            <div class="report-card risk-{{ latest_submission.plagiarism_report.risk_level }}">
+                <div>
+                    <p class="report-label">Overall Similarity</p>
+                    <strong class="report-value">{{ (latest_submission.plagiarism_report.overall_similarity * 100) | round(2) }}%</strong>
+                </div>
+                <div class="report-meta">
+                    <span>Risk: {{ latest_submission.plagiarism_report.risk_level|title }}</span>
+                    <a href="{{ url_for('student.download_report', report_id=latest_submission.plagiarism_report.id) }}">Download report</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No plagiarism report available yet.</p>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <p>No report data available.</p>
+            </div>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <h3>Supervisor Feedback</h3>
+            <span class="panel-badge">Comments</span>
+        </div>
+
+        {% if submissions %}
+            {% for sub in submissions[:4] %}
+                <div class="feedback-card">
+                    <div class="feedback-head">
+                        <strong>{{ sub.stage|replace('_', ' ')|title }}</strong>
+                        <span>{{ sub.status|replace('_', ' ')|title }}</span>
+                    </div>
+                    <p>
+                        {% if sub.feedback %}
+                            {{ sub.feedback.comments }}
+                        {% else %}
+                            No comments yet.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No supervisor feedback yet.</p>
+            </div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
