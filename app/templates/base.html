@@ -26,17 +26,6 @@
         </div>
 
         <nav class="nav">
-            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-            {% if current_user.is_authenticated and current_user.has_role('student') %}
-                <a class="nav-link" href="{{ url_for('student.dashboard') }}">Student Dashboard</a>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.has_role('supervisor') %}
-                <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}">Supervisor Dashboard</a>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.has_role('admin') %}
-                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
-            {% endif %}
-
             {% if current_user.is_authenticated and current_user.has_role('department_admin') %}
                 <a href="{{ url_for('department_admin.dashboard') }}" class="nav-link">Department Admin</a>
             {% endif %}
